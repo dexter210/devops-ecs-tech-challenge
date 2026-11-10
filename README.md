@@ -103,37 +103,6 @@ Terraform provisions the AWS infrastructure, while CloudWatch provides container
 
 ---
 
-## Repository Structure
-
-```text
-.
-├── .github/
-│   └── workflows/
-│       ├── aws-auth-test.yml
-│       └── deploy-ecs.yml
-├── backend/
-│   ├── Dockerfile
-│   └── ...
-├── frontend/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── ...
-├── terraform/
-│   ├── alb.tf
-│   ├── autoscaling.tf
-│   ├── cloudwatch.tf
-│   ├── ecr.tf
-│   ├── ecs.tf
-│   ├── iam.tf
-│   ├── networking.tf
-│   ├── outputs.tf
-│   ├── providers.tf
-│   ├── security-groups.tf
-│   └── variables.tf
-├── screenshots/
-├── .gitignore
-└── README.md
-```
 
 ---
 
