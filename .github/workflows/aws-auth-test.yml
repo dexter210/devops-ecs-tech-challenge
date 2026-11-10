@@ -1,8 +1,11 @@
 name: AWS OIDC Authentication Test
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - gitops
 
+  workflow_dispatch:
 permissions:
   id-token: write
   contents: read
