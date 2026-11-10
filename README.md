@@ -34,6 +34,23 @@ CloudWatch + ECS Auto Scaling
 
 > Architecture diagram will be added here after final review.
 
+
+## Submission Requirements
+
+This repository is structured to satisfy the challenge submission requirements:
+
+- All source code, infrastructure code, workflows, and project assets are version controlled in GitHub.
+- The repository includes this README with installation, local execution, Docker, Terraform, and deployment instructions.
+- The frontend and backend are fully Dockerized.
+- The application has been validated locally before deployment.
+- The deployed application runs on AWS ECS Fargate.
+- GitHub Actions automates container build, image push, and ECS deployment from the `gitops` branch.
+- The final submission must include a hyperlink to this GitHub repository.
+- Because the repository is private, access must be shared with **michaeltayo96@outlook.com** before submission.
+- The project should remain runnable and reproducible from the instructions in this README.
+
+> Submission note: before submitting, verify that the repository collaborator/invite has been added for **michaeltayo96@outlook.com** and that the public application endpoint is still reachable.
+
 ## Technology Stack
 
 | Area | Technology |
