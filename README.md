@@ -1,59 +1,260 @@
-# Overview
-This repository contains a React frontend, and an Express backend that the frontend connects to.
+# DevOps Tech Challenge — React + Express on Amazon ECS Fargate
 
-# Objective
-Deploy the frontend and backend to somewhere publicly accessible over the internet. The AWS Free Tier should be more than sufficient to run this project, but you may use any platform and tooling you'd like for your solution.
+## Project Overview
 
-Fork this repo as a base. You may change any code in this repository to suit the infrastructure you build in this code challenge.
+This project deploys a containerized React frontend and Express/Node.js backend to AWS using Amazon ECS with Fargate. The infrastructure is provisioned with Terraform, container images are stored in Amazon ECR, traffic is routed through an Application Load Balancer, and deployments are automated from the `gitops` branch with GitHub Actions using AWS OIDC authentication.
 
-# Submission
-1. A github repo that has been forked from this repo with all your code.
-2. Modify this README file with instructions for:
-* Any tools needed to deploy your infrastructure
-* All the steps needed to repeat your deployment process
-* URLs to the your deployed frontend.
+The goal of this repository is to demonstrate a complete cloud deployment workflow that is reproducible, secure, observable, and automated.
 
-# Evaluation
-You will be evaluated on the ease to replicate your infrastructure. This is a combination of quality of the instructions, as well as any scripts to automate the overall setup process.
+## Architecture
 
-# Setup your environment
-Install nodejs. Binaries and installers can be found on nodejs.org.
-https://nodejs.org/en/download/
+The final application flow is:
 
-For macOS or Linux, Nodejs can usually be found in your preferred package manager.
-https://nodejs.org/en/download/package-manager/
-
-Depending on the Linux distribution, the Node Package Manager `npm` may need to be installed separately.
-
-# Running the project
-The backend and the frontend will need to run on separate processes. The backend should be started first.
+```text
+Developer
+   ↓
+GitHub — gitops branch
+   ↓
+GitHub Actions
+   ↓
+AWS OIDC / IAM Role
+   ↓
+Build Docker Images
+   ↓
+Amazon ECR
+   ↓
+Amazon ECS / Fargate
+   ↓
+Application Load Balancer
+   ├── /       → Frontend ECS Service
+   └── /api/*  → Backend ECS Service
+   ↓
+CloudWatch + ECS Auto Scaling
 ```
-cd backend
-npm ci
-npm start
+
+> Architecture diagram will be added here after final review.
+
+## Technology Stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | React |
+| Backend | Node.js / Express |
+| Containerization | Docker |
+| Frontend Web Server | Nginx |
+| Infrastructure as Code | Terraform |
+| Container Registry | Amazon ECR |
+| Container Orchestration | Amazon ECS |
+| Compute | AWS Fargate |
+| Load Balancing | Application Load Balancer |
+| Monitoring | Amazon CloudWatch |
+| Auto Scaling | ECS Service Auto Scaling |
+| CI/CD | GitHub Actions |
+| AWS Authentication | GitHub OIDC + IAM |
+
+## Repository Structure
+
+```text
+.
+├── .github/
+│   └── workflows/
+├── backend/
+├── frontend/
+├── terraform/
+├── screenshots/
+└── README.md
 ```
-The backend should response to a GET request on `localhost:8080`.
 
-With the backend started, the frontend can be started.
+## 1. Local Application Validation
+
+This section documents the initial validation of the supplied React frontend and Express backend before containerization.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 2. Docker Containerization
+
+The backend was packaged into a Node.js container, while the React frontend was compiled with a multi-stage Docker build and served through Nginx.
+
+The application was validated locally in containers before moving to AWS.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 3. Terraform Infrastructure
+
+Terraform is used to provision the AWS application infrastructure, including networking, ECR, load balancing, ECS, IAM, CloudWatch, and service auto scaling.
+
+### AWS Networking
+
+The application uses a dedicated VPC with public subnets across multiple Availability Zones, an Internet Gateway, and routing required for the internet-facing Application Load Balancer and Fargate tasks.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 4. Amazon ECR
+
+Separate ECR repositories store the frontend and backend Docker images. Image scanning is enabled to help identify known package vulnerabilities.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 5. Application Load Balancer
+
+The Application Load Balancer acts as the public entry point for the application.
+
+Routing behavior:
+
+```text
+/       → Frontend Target Group → Frontend ECS Service
+/api/*  → Backend Target Group  → Backend ECS Service
 ```
-cd frontend
-npm ci
-npm start
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 6. Amazon ECS and Fargate
+
+The application runs as two ECS services:
+
+### Frontend Service
+
+- Fargate
+- 0.5 vCPU
+- 1 GB memory
+- Container port 80
+- Minimum tasks: 1
+- Desired tasks: 1
+- Maximum tasks: 4
+
+### Backend Service
+
+- Fargate
+- 0.5 vCPU
+- 1 GB memory
+- Container port 8080
+- Minimum tasks: 1
+- Desired tasks: 1
+- Maximum tasks: 4
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 7. Troubleshooting and CloudWatch
+
+CloudWatch is used for container logging and ECS service metrics.
+
+During the first ECS frontend deployment, the Nginx configuration referenced a Docker-local hostname that was valid on the local Docker network but unavailable in ECS. The configuration was corrected so that the Application Load Balancer handles `/api/*` routing in AWS.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 8. ECS Auto Scaling Validation
+
+Both ECS services use target tracking based on average CPU utilization.
+
+Configuration:
+
+- Minimum tasks: 1
+- Desired tasks: 1
+- Maximum tasks: 4
+- Target CPU utilization: 50%
+
+During load testing, the backend service successfully scaled horizontally from one Fargate task to four tasks and later returned to one task after demand subsided.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 9. GitOps CI/CD with GitHub Actions
+
+The `gitops` branch contains the automated deployment workflow.
+
+The workflow performs the following actions:
+
+1. Checks out the repository.
+2. Authenticates to AWS using GitHub OIDC.
+3. Logs in to Amazon ECR.
+4. Builds frontend and backend Docker images.
+5. Tags the images with the Git commit SHA.
+6. Pushes both images to ECR.
+7. Registers new ECS task definition revisions.
+8. Updates the frontend and backend ECS services.
+9. Waits for both services to reach a stable state.
+
+No long-lived AWS access keys are stored in GitHub.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## 10. Deployment Validation
+
+The final deployment is validated through the public Application Load Balancer endpoint.
+
+The frontend is served through the ALB, while requests to `/api/*` are routed to the backend ECS service.
+
+### Evidence
+
+_Screenshots will be added after review._
+
+## Deployment Workflow
+
+```text
+Code Change
+   ↓
+Push to gitops branch
+   ↓
+GitHub Actions
+   ↓
+OIDC Authentication
+   ↓
+Docker Build
+   ↓
+Amazon ECR
+   ↓
+New ECS Task Definition Revisions
+   ↓
+ECS Service Rolling Deployment
+   ↓
+Application Load Balancer
+   ↓
+Live Application
 ```
-The frontend can be accessed at `localhost:3000`. If the frontend successfully connects to the backend, a message saying "SUCCESS" followed by a guid should be displayed on the screen.  If the connection failed, an error message will be displayed on the screen.
 
-# Configuration
-The frontend has a configuration file at `frontend/src/config.js` that defines the URL to call the backend. This URL is used on `frontend/src/App.js#12`, where the front end will make the GET call during the initial load of the page.
+## Security Decisions
 
-The backend has a configuration file at `backend/config.js` that defines the host that the frontend will be calling from. This URL is used in the `Access-Control-Allow-Origin` CORS header, read in `backend/index.js#14`
+- GitHub Actions authenticates to AWS with OIDC rather than long-lived access keys.
+- ECS tasks use a dedicated task execution role.
+- The backend is not directly exposed to the public internet through its security group.
+- Application traffic enters through the ALB.
+- Terraform state and local provider cache files are excluded from Git.
+- ECR image scanning is enabled.
+- IAM permissions for GitHub Actions are limited to the deployment actions required by the project.
 
-# Optional Extras
-The core requirement for this challenge is to get the provided application up and running for consumption over the public internet. That being said, there are some opportunities in this code challenge to demonstrate your skill sets that are above and beyond the core requirement.
+## Cost Management
 
-A few examples of extras for this coding challenge:
-1. Dockerizing the application
-2. Scripts to set up the infrastructure
-3. Providing a pipeline for the application deployment
-4. Running the application in a serverless environment
+This project uses billable AWS resources including Fargate tasks and an Application Load Balancer. Resources should be monitored and removed when they are no longer needed.
 
-This is not an exhaustive list of extra features that could be added to this code challenge. At the end of the day, this section is for you to demonstrate any skills you want to show that’s not captured in the core requirement.
+## Screenshots
+
+Project evidence is stored in:
+
+```text
+screenshots/
+```
+
+The screenshots are intentionally numbered to preserve the order in which the project was built and validated.
+
+## Status
+
+**GitOps deployment: Completed**
+
+The remaining documentation work is to select the strongest screenshots, add the final architecture diagram, and connect the evidence to the relevant sections above.
