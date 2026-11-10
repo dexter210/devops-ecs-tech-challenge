@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - gitops
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/deploy-ecs.yml'
+  workflow_dispatch:
 
 permissions:
   id-token: write
