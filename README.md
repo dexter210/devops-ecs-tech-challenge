@@ -917,11 +917,6 @@ The completed project demonstrates:
 https://github.com/dexter210/devops-ecs-tech-challenge
 ```
 
-The repository is private and must be shared with:
-
-```text
-michaeltayo96@outlook.com
-```
 
 ## Public Frontend
 
