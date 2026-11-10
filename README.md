@@ -16,7 +16,21 @@ The final solution uses:
 - **GitHub Actions** for CI/CD
 - **GitHub OIDC + AWS IAM** for short-lived AWS authentication
 
-The final application is publicly accessible through an AWS Application Load Balancer.
+The final application is publicly accessible through an AWS Application Load Balancer, with deployments automated from the `gitops` branch.
+
+---
+
+## Quick Links
+
+- [Architecture](#final-architecture)
+- [Local Setup](#1-local-application-setup)
+- [Docker](#2-docker-containerization)
+- [Terraform](#3-terraform-infrastructure)
+- [ECS/Fargate](#7-amazon-ecs-and-aws-fargate)
+- [Auto Scaling](#10-ecs-service-auto-scaling)
+- [GitHub Actions GitOps](#11-github-actions-gitops-pipeline)
+- [Reproducing the Deployment](#13-reproducing-the-deployment)
+- [Submission](#submission)
 
 ---
 
@@ -37,60 +51,36 @@ This repository is structured to satisfy the challenge submission requirements:
 
 ## Final Architecture
 
-The implemented architecture is:
+The diagram below represents the architecture actually implemented in this project: GitHub Actions GitOps, AWS OIDC/IAM authentication, Terraform-provisioned infrastructure, ECR, an internet-facing ALB, ECS Fargate services, CloudWatch, security groups, and CPU-based ECS Service Auto Scaling.
+
+![DevOps Tech Challenge AWS Architecture](screenshots/My%20AWS%20Building.png)
+
+### Architecture Flow
 
 ```text
 Developer
-   |
-   | git push
-   v
-GitHub Repository
-   |
-   | gitops branch
-   v
+   ↓
+GitHub Repository — gitops branch
+   ↓
 GitHub Actions
-   |
-   | OIDC
-   v
-AWS IAM Role
-   |
-   +-------------------------+
-   |                         |
-   v                         v
-Build Frontend Image     Build Backend Image
-   |                         |
-   +-----------+-------------+
-               |
-               v
-          Amazon ECR
-               |
-               v
-      ECS Task Definitions
-               |
-       +-------+-------+
-       |               |
-       v               v
-Frontend Service   Backend Service
-Fargate :80        Fargate :8080
-       |               |
-       v               v
-Frontend TG        Backend TG
-       \               /
-        \             /
-         v           v
-     Application Load Balancer
-        /           /api/*
-         \           /
-          v         v
-          Internet User
-
-CloudWatch receives application logs and ECS metrics.
-ECS Service Auto Scaling adjusts task count based on CPU utilization.
+   ↓
+GitHub OIDC → AWS IAM deployment role
+   ↓
+Build and tag frontend/backend Docker images
+   ↓
+Amazon ECR
+   ↓
+Register new ECS task definition revisions
+   ↓
+Update ECS Fargate services
+   ↓
+Application Load Balancer
+   ├── /       → Frontend target group → Frontend service :80
+   └── /api/*  → Backend target group  → Backend service :8080
 ```
 
-> The original architecture screenshot in `screenshots/00-archetectural diagram.png` contains an earlier Jenkins alternative and is intentionally not used here. The final implemented CI/CD path is GitHub Actions only.
+Terraform provisions the AWS infrastructure, while CloudWatch provides container logs and ECS metrics. Both ECS services use target-tracking auto scaling from **1 to 4 tasks** with a **50% CPU target**.
 
----
 
 ## Technology Stack
 
