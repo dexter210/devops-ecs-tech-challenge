@@ -44,7 +44,6 @@ This repository is structured to satisfy the challenge submission requirements:
 - The application was validated locally before AWS deployment.
 - Terraform is used to provision the AWS application infrastructure.
 - GitHub Actions automates application deployment from the `gitops` branch.
-- The private repository must be shared with **michaeltayo96@outlook.com** before submission.
 - The final submission should include a hyperlink to this repository and the public frontend URL.
 
 ---
